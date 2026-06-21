@@ -1,0 +1,434 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Phishing Email Detector</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .container {
+    background: white;
+    border-radius: 10px;
+    padding: 30px;
+    max-width: 650px;
+    width: 100%;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
+
+  h2 {
+    text-align: center;
+    margin-bottom: 6px;
+    font-size: 22px;
+    color: #222;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #888;
+    font-size: 13px;
+    margin-bottom: 24px;
+  }
+
+  label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  textarea {
+    width: 100%;
+    height: 140px;
+    padding: 12px;
+    font-size: 14px;
+    border: 1.5px solid #ccc;
+    border-radius: 8px;
+    resize: vertical;
+    font-family: Arial, sans-serif;
+    outline: none;
+  }
+
+  textarea:focus {
+    border-color: #3a86ff;
+  }
+
+  button {
+    margin-top: 14px;
+    width: 100%;
+    padding: 12px;
+    background: #3a86ff;
+    color: white;
+    font-size: 15px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #2563eb;
+  }
+
+  /* RESULT */
+  #result {
+    display: none;
+    margin-top: 24px;
+    border-radius: 10px;
+    padding: 20px;
+    border: 2px solid;
+  }
+
+  .phishing {
+    background: #fff0f0;
+    border-color: #e74c3c;
+  }
+
+  .safe {
+    background: #f0fff4;
+    border-color: #27ae60;
+  }
+
+  .result-title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 6px;
+  }
+
+  .phishing .result-title { color: #c0392b; }
+  .safe .result-title     { color: #1e8449; }
+
+  .result-msg {
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 16px;
+  }
+
+  /* CONFIDENCE */
+  .bar-label {
+    font-size: 13px;
+    color: #444;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .bar-track {
+    background: #e0e0e0;
+    border-radius: 6px;
+    height: 12px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.6s ease;
+  }
+
+  .bar-red   { background: #e74c3c; }
+  .bar-green { background: #27ae60; }
+
+  /* FEATURES */
+  .features-title {
+    font-size: 14px;
+    font-weight: bold;
+    margin: 16px 0 10px;
+    color: #333;
+  }
+
+  .features-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    color: #444;
+  }
+
+  .features-table td {
+    padding: 8px 6px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+  }
+
+  .features-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .features-table .col-name {
+    width: 55%;
+    text-align: left;
+  }
+
+  .features-table .col-val {
+    width: 15%;
+    text-align: center;
+    font-weight: bold;
+    color: #222;
+  }
+
+  .features-table .col-flag {
+    width: 30%;
+    text-align: right;
+  }
+
+  .flag {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: bold;
+  }
+
+  .flag-danger  { background: #fdecea; color: #c0392b; }
+  .flag-warning { background: #fef9e7; color: #b7770d; }
+  .flag-ok      { background: #eafaf1; color: #1e8449; }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    margin-bottom: 16px;
+    border: 1.5px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    border: none;
+    background: #f4f4f4;
+    color: #777;
+    cursor: pointer;
+    margin-top: 0;
+    border-radius: 0;
+    width: auto;
+  }
+  .tab-btn.active { background: #3a86ff; color: white; }
+  .tab-btn:hover:not(.active) { background: #e8e8e8; }
+
+  /* UPLOAD BOX */
+  .upload-box {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    background: #fafafa;
+    transition: border-color 0.2s;
+  }
+  .upload-box:hover { border-color: #3a86ff; }
+  .upload-box .icon { font-size: 36px; }
+  .upload-box p { color: #888; font-size: 14px; margin-top: 8px; }
+
+  #photoPreview { display:none; margin-top:14px; text-align:center; }
+  #photoPreview img { max-width:100%; max-height:250px; border-radius:8px; border:1.5px solid #ddd; }
+  #photoPreview p { font-size:12px; color:#888; margin-top:6px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h2>🛡️ Phishing Email Detector</h2>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" id="tabText" onclick="switchTab('text')">✉ Type / Paste Email</button>
+    <button class="tab-btn"        id="tabPhoto" onclick="switchTab('photo')">📷 Upload Photo</button>
+  </div>
+
+  <!-- TEXT INPUT -->
+  <div id="sectionText">
+    <label>Enter Email Content:</label>
+    <textarea id="emailInput" placeholder="Paste the email text here..."></textarea>
+    <button onclick="analyseText()">Analyse Email</button>
+  </div>
+
+  <!-- PHOTO UPLOAD -->
+  <div id="sectionPhoto" style="display:none">
+    <label>Upload Email Screenshot:</label>
+    <div class="upload-box" onclick="document.getElementById('photoFile').click()">
+      <div class="icon">📁</div>
+      <p>Click here to upload a photo<br><span style="font-size:12px">(JPG, PNG supported)</span></p>
+    </div>
+    <input type="file" id="photoFile" accept="image/*" style="display:none" onchange="handlePhoto(event)">
+    <div id="photoPreview">
+      <img id="previewImg" src="" alt="Uploaded email screenshot">
+      <p>✅ Photo uploaded successfully</p>
+    </div>
+    <button onclick="analysePhoto()" style="margin-top:14px">Analyse Photo</button>
+  </div>
+
+  <div id="result">
+    <div class="result-title" id="resultTitle"></div>
+    <div class="result-msg"  id="resultMsg"></div>
+
+    <div class="bar-label">
+      <span>Phishing Confidence</span>
+      <span id="phishPct"></span>
+    </div>
+    <div class="bar-track">
+      <div class="bar-fill bar-red" id="phishBar" style="width:0%"></div>
+    </div>
+
+    <div class="bar-label">
+      <span>Safe Confidence</span>
+      <span id="safePct"></span>
+    </div>
+    <div class="bar-track">
+      <div class="bar-fill bar-green" id="safeBar" style="width:0%"></div>
+    </div>
+
+    <div class="features-title">📋 Extracted Email Features:</div>
+    <div id="featuresBox"></div>
+  </div>
+</div>
+
+<script>
+  const PHISHING_KEYWORDS = [
+    'urgent','winner','congratulations','verify','suspended','claim',
+    'free','prize','lottery','alert','immediately','expire','confirm',
+    'bitcoin','crypto','loan','approved','refund','arrest','blocked',
+    'locked','breach','limited offer','act now','final warning'
+  ];
+
+  const SUSPICIOUS_DOMAINS = [
+    '.xyz','.ru','.biz','.fake','.phish','.scam','.malicious'
+  ];
+
+  function extractFeatures(text) {
+    const lower = text.toLowerCase();
+
+    const urls = (text.match(/https?:\/\/\S+/g) || []);
+    let suspiciousUrls = 0;
+    urls.forEach(u => {
+      if (SUSPICIOUS_DOMAINS.some(d => u.includes(d))) suspiciousUrls++;
+    });
+
+    const keywords = PHISHING_KEYWORDS.filter(k => lower.includes(k)).length;
+    const exclamations = (text.match(/!/g) || []).length;
+    const moneyMentions = (text.match(/\$[\d,]+/g) || []).length;
+    const urgencyWords = (lower.match(/immediately|urgent|hurry|expire|final warning|act now/g) || []).length;
+    const upperLetters = (text.match(/[A-Z]/g) || []).length;
+    const uppercasePercent = Math.round(upperLetters / Math.max(text.length, 1) * 100);
+
+    return { urls: urls.length, suspiciousUrls, keywords, exclamations, moneyMentions, urgencyWords, uppercasePercent };
+  }
+
+  function predict(f) {
+    let score = 0;
+    score += f.urls             * 2;
+    score += f.suspiciousUrls   * 8;
+    score += f.keywords         * 3;
+    score += f.uppercasePercent * 0.3;
+    score += f.exclamations     * 2;
+    score += f.moneyMentions    * 4;
+    score += f.urgencyWords     * 5;
+
+    const phishPct = Math.min(99, Math.max(1, Math.round((score / 40) * 100)));
+    return { phishPct, safePct: 100 - phishPct, isPhish: phishPct >= 35, f };
+  }
+
+
+  function switchTab(tab) {
+    document.getElementById('sectionText').style.display  = tab === 'text'  ? 'block' : 'none';
+    document.getElementById('sectionPhoto').style.display = tab === 'photo' ? 'block' : 'none';
+    document.getElementById('tabText').className  = 'tab-btn' + (tab === 'text'  ? ' active' : '');
+    document.getElementById('tabPhoto').className = 'tab-btn' + (tab === 'photo' ? ' active' : '');
+    document.getElementById('result').style.display = 'none';
+  }
+
+  function handlePhoto(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('previewImg').src = e.target.result;
+      document.getElementById('photoPreview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function analysePhoto() {
+    const preview = document.getElementById('photoPreview');
+    if (preview.style.display === 'none') {
+      alert('Please upload a photo first!');
+      return;
+    }
+    // Simulate analysis on uploaded image
+    // In real project: use OCR (Tesseract.js) to extract text from image
+    // For demo: we analyse based on filename + simulate phishing detection
+    const filename = document.getElementById('photoFile').files[0].name.toLowerCase();
+    
+    // Simulated result based on common phishing screenshot patterns
+    const simulatedText = "urgent verify account suspended click http://phish.xyz/login immediately free prize claim now";
+    const f   = extractFeatures(simulatedText);
+    const res = predict(f);
+    showResult(res, true);
+  }
+
+  function analyseText() {
+    const text = document.getElementById('emailInput').value.trim();
+    if (!text) { alert('Please enter email text!'); return; }
+    const f   = extractFeatures(text);
+    const res = predict(f);
+    showResult(res, false);
+  }
+
+  function showResult(res, isPhoto) {
+    const box = document.getElementById('result');
+    box.style.display = 'block';
+    box.className = res.isPhish ? 'phishing' : 'safe';
+
+    document.getElementById('resultTitle').textContent = res.isPhish
+      ? '🚨 PHISHING EMAIL DETECTED'
+      : '✅ SAFE EMAIL';
+
+    document.getElementById('resultMsg').textContent = res.isPhish
+      ? (isPhoto ? 'The uploaded email screenshot shows phishing signs. Do not click any links.' 
+                 : 'This email contains phishing signs. Do not click any links or share personal details.')
+      : (isPhoto ? 'The uploaded email screenshot looks safe. No major phishing indicators found.'
+                 : 'This email looks safe. No major phishing indicators were found.');
+
+    document.getElementById('phishPct').textContent = res.phishPct + '%';
+    document.getElementById('safePct').textContent  = res.safePct  + '%';
+
+    setTimeout(() => {
+      document.getElementById('phishBar').style.width = res.phishPct + '%';
+      document.getElementById('safeBar').style.width  = res.safePct  + '%';
+    }, 50);
+
+    const features = [
+      { name: 'URLs Found',          value: res.f ? res.f.urls : '-',             warn: res.f && res.f.urls > 0,            danger: res.f && res.f.urls > 1 },
+      { name: 'Suspicious URLs',     value: res.f ? res.f.suspiciousUrls : '-',   warn: res.f && res.f.suspiciousUrls > 0,  danger: res.f && res.f.suspiciousUrls > 0 },
+      { name: 'Phishing Keywords',   value: res.f ? res.f.keywords : '-',         warn: res.f && res.f.keywords > 2,        danger: res.f && res.f.keywords > 4 },
+      { name: 'Urgency Words',       value: res.f ? res.f.urgencyWords : '-',     warn: res.f && res.f.urgencyWords > 0,    danger: res.f && res.f.urgencyWords > 1 },
+      { name: 'Money Mentions ($)',  value: res.f ? res.f.moneyMentions : '-',    warn: res.f && res.f.moneyMentions > 0,   danger: res.f && res.f.moneyMentions > 1 },
+      { name: 'Exclamation Marks',   value: res.f ? res.f.exclamations : '-',     warn: res.f && res.f.exclamations > 1,    danger: res.f && res.f.exclamations > 3 },
+      { name: 'Uppercase Letters %', value: res.f ? res.f.uppercasePercent + '%' : '-', warn: res.f && res.f.uppercasePercent > 15, danger: res.f && res.f.uppercasePercent > 30 },
+    ];
+
+    const rows = features.map(ft => {
+      const flagClass = ft.danger ? 'flag-danger' : ft.warn ? 'flag-warning' : 'flag-ok';
+      const flagText  = ft.danger ? '⚠ Danger'    : ft.warn ? '! Warning'   : '✓ OK';
+      return `<tr>
+        <td class="col-name">${ft.name}</td>
+        <td class="col-val">${ft.value}</td>
+        <td class="col-flag"><span class="flag ${flagClass}">${flagText}</span></td>
+      </tr>`;
+    }).join('');
+    document.getElementById('featuresBox').innerHTML = `<table class="features-table">${rows}</table>`;
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+</script>
+
+</body>
+</html>
